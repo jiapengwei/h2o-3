@@ -895,11 +895,13 @@ def _add_histogram(frame, column, add_rug=True, add_histogram=True, levels_order
                 bins=20)
             hist_x = hist_x[:-1].astype(float)
             hist_y = hist_y.astype(float)
+        sorted_x = sorted(hist_x)
+        width = sorted_x[1] - sorted_x[0]
         plt.bar(mapping(hist_x),
                 hist_y / hist_y.max() * ((ylims[1] - ylims[0]) / 1.618),  # ~ golden ratio
                 bottom=ylims[0],
                 align="center" if nf.isfactor(column) else "edge",
-                width=hist_x[1] - hist_x[0], color="gray", alpha=0.2)
+                width=width, color="gray", alpha=0.2)
     if nf.isfactor(column):
         plt.xticks(mapping(range(nf.nlevels(column))), nf.levels(column))
     plt.ylim(ylims)

@@ -1450,7 +1450,8 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
               System.out.println("DONE after " + (iterCnt-1) + " iterations (1)");
               return;
             }
-            betaCnd = s == Solver.COORDINATE_DESCENT?COD_solve(gram,_state._alpha,_state.lambda()):ADMM_solve(gram.gram,gram.xy);
+            betaCnd = s == Solver.COORDINATE_DESCENT?COD_solve(gram,_state._alpha,_state.lambda())
+                    :ADMM_solve(gram.gram,gram.xy); // this will shrink betaCnd if needed but this call may be skipped
           }
           firstIter = false;
           long t3 = System.currentTimeMillis();
@@ -1459,6 +1460,10 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
               ls = (_state.l1pen() == 0 && !_state.activeBC().hasBounds())
                  ? new MoreThuente(_state.gslvr(),_state.beta(), _state.ginfo())
                  : new SimpleBacktrackingLS(_state.gslvr(),_state.beta().clone(), _state.l1pen(), _state.ginfo());
+            double[] oldBetaCnd = ls.getX();
+            if (betaCnd.length != oldBetaCnd.length) {  // ln 1453 is skipped and betaCnd.length != _state.beta()
+              betaCnd = _state.extractSubRange(betaCnd.length, 0, _state.activeData()._activeCols, betaCnd);
+            }
             if (!ls.evaluate(ArrayUtils.subtract(betaCnd, ls.getX(), betaCnd))) { // ls.getX() get the old beta value
               Log.info(LogMsg("Ls failed " + ls));
               return;
@@ -2092,6 +2097,9 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
               Log.info(LogMsg("Class " + c + " got " + _state.activeDataMultinomial(c).fullN() + " active columns out of " + _state._dinfo.fullN() + " total"));
           else
             Log.info(LogMsg("Got " + _state.activeData().fullN() + " active columns out of " + _state._dinfo.fullN() + " total"));
+          //debugging for Wendy
+          int stateActiveCols = _state.activeData()._activeCols==null?_state.activeData().fullN()+1:_state.activeData()._activeCols.length;
+          Log.info(LogMsg("\n ##### fold number "+_parms._cv_fold+" _state.activeCols number "+stateActiveCols));
           fitModel();
         } while (!_state.checkKKTs());
         Log.info(LogMsg("solution has " + ArrayUtils.countNonzeros(_state.beta()) + " nonzeros"));

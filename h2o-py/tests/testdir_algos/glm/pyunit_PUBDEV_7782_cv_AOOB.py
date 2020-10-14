@@ -13,6 +13,8 @@ from h2o.estimators import H2OGeneralizedLinearEstimator
 # Hence, you will get betaCnd of one length and _state.beta() of another length.  My fix is to make sure when there
 # is a length difference, I will extract the correct coefficients from betaCnd such that it will be of the same length
 # as _state.beta().
+#
+# Test provided by Seb.
 def test_GLM_throws_ArrayOutOfBoundException():    
 # everything in this test is important to cause the exception:    
 # - GLEASON as a categorical    
